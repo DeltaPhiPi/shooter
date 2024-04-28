@@ -1,0 +1,12 @@
+[package]
+name = "shooter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.13.2"
+bevy_embedded_assets = "0.10.2"
+rand = "0.8.5"
+[profile.release]
+opt-level = 'z'
+lto = true
