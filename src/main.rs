@@ -1,4 +1,4 @@
-use bevy::{math::{vec2, vec3}, prelude::*, window::WindowResolution};
+use bevy::{asset::AssetMetaCheck, math::{vec2, vec3}, prelude::*, window::WindowResolution};
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use rand::Rng;
 #[derive(Component, Default, Debug)]
@@ -95,6 +95,7 @@ fn main() {
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(TickCounter::default())
         .insert_resource(Score(0))
+        .insert_resource(AssetMetaCheck::Never)
         .add_plugins((EmbeddedAssetPlugin {mode: bevy_embedded_assets::PluginMode::ReplaceAndFallback { path: "assets".to_owned() }}, DefaultPlugins.set(ImagePlugin::default_nearest())))
         .add_systems(Startup, setup)
         .add_systems(FixedUpdate, (
@@ -133,6 +134,9 @@ fn spawn_enemy_schedule(mut commands: Commands, asset_server: Res<AssetServer>, 
         spawn_enemy(&mut commands, &asset_server);
     }
     if tick.is_n(40) && rand::thread_rng().gen_bool((0.0003 * (score.0 as f64)).clamp(0.001, 0.999)) {
+        spawn_enemy(&mut commands, &asset_server);
+    }
+    if tick.is_n(13) && rand::thread_rng().gen_bool((0.0001 * (score.0 as f64)).clamp(0.001, 0.999)) {
         spawn_enemy(&mut commands, &asset_server);
     }
 }
@@ -204,14 +208,14 @@ fn render(mut q: Query<(&Position, &mut Transform)>) {
 }
 fn render_player(mut q: Query<(&mut TextureAtlas, &Velocity), With<Player>>, tick: Res<TickCounter>) {
     let (mut atlas, force) = q.single_mut();
-    if force.0.x >= 5.0 {
+    if force.0.x >= 3.0 {
         atlas.index = 2;
     }
-    else if force.0.x <= -5.0 {
+    else if force.0.x <= -3.0 {
         atlas.index = 0;
     }
     else {atlas.index = 1}
-    if tick.is_n(10) {
+    if tick.is_n(15) {
         atlas.index += 3;
     };
 }
@@ -247,11 +251,11 @@ fn spawn_bullet(commands: &mut Commands, pos: Vec2, asset_server: &Res<AssetServ
 }
 fn enemy_movement(mut q: Query<(&mut Force, &Phase), With<Enemy>>, tick: Res<TickCounter>) {
     for (mut force, phase) in q.iter_mut() {
-        force.0.y = -1.0;
+        force.0.y = -2.0;
         let t = (tick.inner + phase.0) % 60;
         let t = t as f32;
         let x = t.sin();
-        force.0.x = 4.0 * x;
+        force.0.x = 6.0 * x;
     }
 }
 fn despawn_oob(q: Query<(Entity, &Position), (With<Enemy>, Without<Bullet>)>,
